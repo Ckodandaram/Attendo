@@ -152,6 +152,35 @@ void main() {
       expect(summary.eligibleDays, summary.scheduledDays);
     });
 
+    test('excludes sick leave from eligible workdays and target', () {
+      final entries = {
+        '2026-01-05': AttendanceEntry(
+          date: DateTime(2026, 1, 5),
+          status: AttendanceStatus.pto,
+        ),
+        '2026-01-06': AttendanceEntry(
+          date: DateTime(2026, 1, 6),
+          status: AttendanceStatus.holiday,
+        ),
+        '2026-01-07': AttendanceEntry(
+          date: DateTime(2026, 1, 7),
+          status: AttendanceStatus.sick,
+        ),
+      };
+      final summary = calculateQuarter(
+        quarter: q,
+        today: today,
+        entries: entries,
+        workdays: workdays,
+        targetPercent: 60,
+      );
+
+      expect(summary.scheduledDays, 64);
+      expect(summary.eligibleDays, 61);
+      expect(summary.targetDays, 37);
+      expect(summary.officeDays, 0);
+    });
+
     test('uses a zero-safe rate and treats a zero target as met', () {
       final summary = calculateQuarter(
         quarter: q,

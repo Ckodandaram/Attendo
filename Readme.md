@@ -32,11 +32,15 @@ in the app's local SQLite database.
 ## Build an APK
 
 ```powershell
-flutter build apk --release
+flutter build apk --release --split-per-abi --split-debug-info=build\symbols
 ```
 
-The APK is written to
-`build\app\outputs\flutter-apk\app-release.apk`.
+This creates architecture-specific APKs in
+`build\app\outputs\flutter-apk`. Install the APK matching the phone's CPU
+(most current Android phones use `app-arm64-v8a-release.apk`). Keep the
+generated `build\symbols` files with the release so native crash reports can be
+symbolized. Do not install a debug APK for normal use; Flutter debug builds
+include development runtime data and are substantially larger.
 
 To build a distributable APK with your own signing identity, configure an
 Android release signing key in the generated `android` project before building.
@@ -49,7 +53,8 @@ attendance entry, a month calendar with multi-day status updates, basic goal
 feasibility, insights, history, and local SQLite persistence. The dashboard's
 attendance rate is based on all eligible workdays in the quarter and is floored
 to whole percentages; the configurable target remains separate for goal
-progress and feasibility warnings. Calendar dates outside the configured
+progress and feasibility warnings. PTO, public holidays, and sick leave are
+excluded from eligible days. Calendar dates outside the configured
 workweek are dimmed and unavailable for all status markings.
 Office Wi-Fi and location detection are independently optional; disable both
 for manual-only tracking. On Android, background checks begin after 11:00 AM

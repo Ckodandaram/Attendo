@@ -162,6 +162,7 @@ class _AttendoHomeState extends State<AttendoHome> {
   ];
 
   int _tab = 0;
+  final PageController _pageController = PageController();
   int _target = 60;
   ThemeMode _themeMode = ThemeMode.system;
   Set<int> _workdays = {1, 2, 3, 4, 5};
@@ -194,6 +195,7 @@ class _AttendoHomeState extends State<AttendoHome> {
           _tab = 0;
           _notificationSource = intent.source;
         });
+        if (_pageController.hasClients) _pageController.jumpToPage(0);
         _reload();
       },
     );
@@ -201,6 +203,7 @@ class _AttendoHomeState extends State<AttendoHome> {
 
   @override
   void dispose() {
+    _pageController.dispose();
     _wifiController.dispose();
     _notificationSubscription?.cancel();
     super.dispose();
@@ -240,6 +243,19 @@ class _AttendoHomeState extends State<AttendoHome> {
         _loading = false;
         _loadError = error;
       });
+    }
+  }
+
+  void _navigateToTab(int index) {
+    if (index < 0 || index >= 4 || index == _tab) return;
+    if (_pageController.hasClients) {
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+    } else {
+      setState(() => _tab = index);
     }
   }
 
@@ -421,12 +437,10 @@ class _AttendoHomeState extends State<AttendoHome> {
                                       const EdgeInsets.symmetric(horizontal: 2),
                                   child: FilterChip(
                                     showCheckmark: false,
-                                    visualDensity: VisualDensity.compact,
-                                    materialTapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
-                                    padding: EdgeInsets.zero,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 4),
                                     labelPadding: const EdgeInsets.symmetric(
-                                        horizontal: 2),
+                                        horizontal: 3),
                                     label: Text(
                                       _weekdays[index].substring(0, 3),
                                       style: const TextStyle(fontSize: 12),
@@ -902,8 +916,11 @@ class _AttendoHomeState extends State<AttendoHome> {
       ),
       body: SafeArea(
         top: false,
-        child: IndexedStack(
-          index: _tab,
+        child: PageView(
+          controller: _pageController,
+          onPageChanged: (index) {
+            if (_tab != index) setState(() => _tab = index);
+          },
           children: [
             _HomePage(
               today: today,
@@ -918,7 +935,7 @@ class _AttendoHomeState extends State<AttendoHome> {
               onOtherCheckIn: () => _selectOtherCheckIn(today),
               onDismissNotification: () =>
                   setState(() => _notificationSource = null),
-              onOpenCalendar: () => setState(() => _tab = 1),
+              onOpenCalendar: () => _navigateToTab(1),
             ),
             _CalendarPage(
               month: _month,
@@ -935,7 +952,7 @@ class _AttendoHomeState extends State<AttendoHome> {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
-        onDestinationSelected: (index) => setState(() => _tab = index),
+        onDestinationSelected: _navigateToTab,
         destinations: const [
           NavigationDestination(
               icon: Icon(Icons.home_outlined),

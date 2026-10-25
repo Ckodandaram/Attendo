@@ -115,7 +115,8 @@ QuarterSummary calculateQuarter({
     scheduled++;
     final entry = entries[attendanceDateKey(day)];
     final isExcluded = entry?.status == AttendanceStatus.pto ||
-        entry?.status == AttendanceStatus.holiday;
+        entry?.status == AttendanceStatus.holiday ||
+        entry?.status == AttendanceStatus.sick;
     if (isExcluded) {
       excluded++;
       continue;
